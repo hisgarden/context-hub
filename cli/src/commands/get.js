@@ -5,6 +5,7 @@ import { getEntry, resolveDocPath, resolveEntryFile } from '../lib/registry.js';
 import { fetchDoc, fetchDocFull } from '../lib/cache.js';
 import { output, error, info } from '../lib/output.js';
 import { trackEvent } from '../lib/analytics.js';
+import { readAnnotation } from '../lib/annotations.js';
 
 /**
  * Fetch one or more entries by ID. Auto-detects doc vs skill per entry.
@@ -133,12 +134,17 @@ async function fetchEntries(ids, opts, globalOpts) {
     if (results.length === 1 && !results[0].files) {
       const r = results[0];
       const extraFiles = r.additionalFiles || [];
+      const annotation = readAnnotation(r.id);
       const jsonData = { id: r.id, type: r.type, content: r.content, path: r.path };
       if (extraFiles.length > 0) jsonData.additionalFiles = extraFiles;
+      if (annotation) jsonData.annotation = annotation;
       output(
         jsonData,
         (data) => {
           process.stdout.write(data.content);
+          if (annotation) {
+            process.stdout.write(`\n\n---\n[Agent note — ${annotation.updatedAt}]\n${annotation.note}\n`);
+          }
           if (extraFiles.length > 0) {
             const fileList = extraFiles.map((f) => `  ${f}`).join('\n');
             const example = `chub get ${r.id} --file ${extraFiles[0]}`;

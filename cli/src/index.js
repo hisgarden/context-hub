@@ -10,6 +10,7 @@ import { registerSearchCommand } from './commands/search.js';
 import { registerGetCommand } from './commands/get.js';
 import { registerBuildCommand } from './commands/build.js';
 import { registerFeedbackCommand } from './commands/feedback.js';
+import { registerAnnotateCommand } from './commands/annotate.js';
 import { trackEvent, shutdownAnalytics } from './lib/analytics.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -84,7 +85,7 @@ program
   });
 
 // Commands that don't need registry
-const SKIP_REGISTRY = ['update', 'cache', 'build', 'feedback', 'help'];
+const SKIP_REGISTRY = ['update', 'cache', 'build', 'feedback', 'annotate', 'help'];
 
 program.hook('preAction', async (thisCommand) => {
   const cmdName = thisCommand.args?.[0] || thisCommand.name();
@@ -111,6 +112,7 @@ registerSearchCommand(program);
 registerGetCommand(program);
 registerBuildCommand(program);
 registerFeedbackCommand(program);
+registerAnnotateCommand(program);
 
 program.parse();
 

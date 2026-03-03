@@ -201,6 +201,66 @@ describe('chub CLI e2e', () => {
     });
   });
 
+  describe('annotate', () => {
+    it('saves and displays annotation on get', () => {
+      chub(['annotate', 'acme/widgets', 'Use batch mode for large datasets']);
+      const out = chub(['get', 'acme/widgets']);
+      expect(out).toContain('Agent note');
+      expect(out).toContain('Use batch mode for large datasets');
+    });
+
+    it('replaces annotation on re-annotate', () => {
+      chub(['annotate', 'acme/widgets', 'Updated: use streaming instead']);
+      const out = chub(['get', 'acme/widgets']);
+      expect(out).toContain('use streaming instead');
+      expect(out).not.toContain('batch mode');
+    });
+
+    it('shows annotation with chub annotate <id> (no note)', () => {
+      const out = chub(['annotate', 'acme/widgets']);
+      expect(out).toContain('use streaming instead');
+    });
+
+    it('clears annotation', () => {
+      chub(['annotate', 'acme/widgets', '--clear']);
+      const out = chub(['get', 'acme/widgets']);
+      expect(out).not.toContain('Agent note');
+    });
+
+    it('no annotation section when none set', () => {
+      const out = chub(['get', 'multilang/client', '--lang', 'js']);
+      expect(out).not.toContain('Agent note');
+    });
+
+    it('--list shows all annotations', () => {
+      chub(['annotate', 'acme/widgets', 'Note A']);
+      chub(['annotate', 'multilang/client', 'Note B']);
+      const data = chubJSON(['annotate', '--list']);
+      expect(data.length).toBe(2);
+      const ids = data.map((a) => a.id);
+      expect(ids).toContain('acme/widgets');
+      expect(ids).toContain('multilang/client');
+      // Clean up
+      chub(['annotate', 'acme/widgets', '--clear']);
+      chub(['annotate', 'multilang/client', '--clear']);
+    });
+
+    it('--json includes annotation in get output', () => {
+      chub(['annotate', 'acme/widgets', 'JSON test note']);
+      const data = chubJSON(['get', 'acme/widgets']);
+      expect(data.annotation).toBeDefined();
+      expect(data.annotation.note).toBe('JSON test note');
+      expect(data.annotation.id).toBe('acme/widgets');
+      // Clean up
+      chub(['annotate', 'acme/widgets', '--clear']);
+    });
+
+    it('--json omits annotation when none set', () => {
+      const data = chubJSON(['get', 'acme/widgets']);
+      expect(data.annotation).toBeUndefined();
+    });
+  });
+
   describe('json output', () => {
     it('search --json returns valid JSON with total', () => {
       const data = chubJSON(['search']);
