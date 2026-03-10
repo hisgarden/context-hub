@@ -186,7 +186,7 @@ export function registerGetCommand(program) {
   program
     .command('get <ids...>')
     .description('Fetch docs or skills by ID (auto-detects type)')
-    .option('--lang <language>', 'Language variant (for docs)')
+    .option('--lang <language>', 'Language variant (required for docs): py, js, ts, rb, cs (or full names: python, javascript, typescript, ruby, csharp)')
     .option('--version <version>', 'Specific version (for docs)')
     .option('-o, --output <path>', 'Write to file or directory')
     .option('--full', 'Fetch all files (not just entry point)')

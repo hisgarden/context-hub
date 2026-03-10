@@ -115,10 +115,15 @@ describe('chub CLI e2e', () => {
   });
 
   describe('get', () => {
-    it('fetches single-language doc (auto-infers lang)', () => {
-      const out = chub(['get', 'acme/widgets']);
+    it('fetches single-language doc with --lang', () => {
+      const out = chub(['get', 'acme/widgets', '--lang', 'js']);
       expect(out).toContain('# Acme Widgets API');
       expect(out).toContain('npm install @acme/widgets');
+    });
+
+    it('errors on single-lang doc without --lang', () => {
+      const out = chub(['get', 'acme/widgets'], { expectError: true });
+      expect(out).toContain('--lang');
     });
 
     it('fetches multi-language doc with --lang', () => {
@@ -145,7 +150,7 @@ describe('chub CLI e2e', () => {
     });
 
     it('fetches --full with all files', () => {
-      const out = chub(['get', 'acme/widgets', '--full']);
+      const out = chub(['get', 'acme/widgets', '--lang', 'js', '--full']);
       expect(out).toContain('FILE: DOC.md');
       expect(out).toContain('FILE: references/advanced.md');
       expect(out).toContain('Batch Operations');
@@ -153,7 +158,7 @@ describe('chub CLI e2e', () => {
 
     it('writes to file with -o', () => {
       const tmpFile = join(BUILD_OUTPUT, '_test_output.md');
-      chub(['get', 'acme/widgets', '-o', tmpFile]);
+      chub(['get', 'acme/widgets', '--lang', 'js', '-o', tmpFile]);
       expect(existsSync(tmpFile)).toBe(true);
       const content = readFileSync(tmpFile, 'utf8');
       expect(content).toContain('# Acme Widgets API');
@@ -167,7 +172,7 @@ describe('chub CLI e2e', () => {
     });
 
     it('shows footer with additional files when they exist', () => {
-      const out = chub(['get', 'acme/widgets']);
+      const out = chub(['get', 'acme/widgets', '--lang', 'js']);
       expect(out).toContain('Additional files available');
       expect(out).toContain('references/advanced.md');
       expect(out).toContain('--file');
@@ -179,19 +184,19 @@ describe('chub CLI e2e', () => {
     });
 
     it('fetches specific file with --file', () => {
-      const out = chub(['get', 'acme/widgets', '--file', 'references/advanced.md']);
+      const out = chub(['get', 'acme/widgets', '--lang', 'js', '--file', 'references/advanced.md']);
       expect(out).toContain('Batch Operations');
       expect(out).not.toContain('# Acme Widgets API');
     });
 
     it('errors on nonexistent --file with available list', () => {
-      const out = chub(['get', 'acme/widgets', '--file', 'nonexistent.md'], { expectError: true });
+      const out = chub(['get', 'acme/widgets', '--lang', 'js', '--file', 'nonexistent.md'], { expectError: true });
       expect(out).toContain('not found in acme/widgets');
       expect(out).toContain('references/advanced.md');
     });
 
     it('--json includes additionalFiles array', () => {
-      const data = chubJSON(['get', 'acme/widgets']);
+      const data = chubJSON(['get', 'acme/widgets', '--lang', 'js']);
       expect(data.additionalFiles).toContain('references/advanced.md');
     });
 
@@ -213,19 +218,19 @@ describe('chub CLI e2e', () => {
     });
 
     it('fetches recommended (latest) version by default', () => {
-      const out = chub(['get', 'acme/versioned-api']);
+      const out = chub(['get', 'acme/versioned-api', '--lang', 'js']);
       expect(out).toContain('Versioned API v2');
       expect(out).toContain('version 2.0.0');
     });
 
     it('fetches specific version with --version', () => {
-      const out = chub(['get', 'acme/versioned-api', '--version', '1.0.0']);
+      const out = chub(['get', 'acme/versioned-api', '--lang', 'js', '--version', '1.0.0']);
       expect(out).toContain('Versioned API v1');
       expect(out).toContain('version 1.0.0');
     });
 
     it('errors on nonexistent version with available list', () => {
-      const out = chub(['get', 'acme/versioned-api', '--version', '99.0.0'], { expectError: true });
+      const out = chub(['get', 'acme/versioned-api', '--lang', 'js', '--version', '99.0.0'], { expectError: true });
       expect(out).toContain('Version "99.0.0" not found');
       expect(out).toContain('2.0.0');
       expect(out).toContain('1.0.0');
@@ -235,14 +240,14 @@ describe('chub CLI e2e', () => {
   describe('annotate', () => {
     it('saves and displays annotation on get', () => {
       chub(['annotate', 'acme/widgets', 'Use batch mode for large datasets']);
-      const out = chub(['get', 'acme/widgets']);
+      const out = chub(['get', 'acme/widgets', '--lang', 'js']);
       expect(out).toContain('Agent note');
       expect(out).toContain('Use batch mode for large datasets');
     });
 
     it('replaces annotation on re-annotate', () => {
       chub(['annotate', 'acme/widgets', 'Updated: use streaming instead']);
-      const out = chub(['get', 'acme/widgets']);
+      const out = chub(['get', 'acme/widgets', '--lang', 'js']);
       expect(out).toContain('use streaming instead');
       expect(out).not.toContain('batch mode');
     });
@@ -254,7 +259,7 @@ describe('chub CLI e2e', () => {
 
     it('clears annotation', () => {
       chub(['annotate', 'acme/widgets', '--clear']);
-      const out = chub(['get', 'acme/widgets']);
+      const out = chub(['get', 'acme/widgets', '--lang', 'js']);
       expect(out).not.toContain('Agent note');
     });
 
@@ -278,7 +283,7 @@ describe('chub CLI e2e', () => {
 
     it('--json includes annotation in get output', () => {
       chub(['annotate', 'acme/widgets', 'JSON test note']);
-      const data = chubJSON(['get', 'acme/widgets']);
+      const data = chubJSON(['get', 'acme/widgets', '--lang', 'js']);
       expect(data.annotation).toBeDefined();
       expect(data.annotation.note).toBe('JSON test note');
       expect(data.annotation.id).toBe('acme/widgets');
@@ -287,7 +292,7 @@ describe('chub CLI e2e', () => {
     });
 
     it('--json omits annotation when none set', () => {
-      const data = chubJSON(['get', 'acme/widgets']);
+      const data = chubJSON(['get', 'acme/widgets', '--lang', 'js']);
       expect(data.annotation).toBeUndefined();
     });
   });

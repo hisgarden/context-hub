@@ -100,13 +100,14 @@ describe('chub_get (handleGet)', () => {
   });
 
   it('returns error for nonexistent file within entry', async () => {
-    // Find a single-language entry to avoid "needs language" errors
+    // Find a single-language entry and pass its language to avoid "needs language" errors
     const listResult = await handleList({ limit: 500 });
     const data = parseResult(listResult);
     const singleLang = data.entries.find((e) => e.languages && e.languages.length === 1);
     if (!singleLang) return;
 
-    const result = await handleGet({ id: singleLang.id, file: 'nonexistent-file-xyz.md' });
+    const lang = singleLang.languages[0];
+    const result = await handleGet({ id: singleLang.id, lang, file: 'nonexistent-file-xyz.md' });
     expect(result.isError).toBe(true);
     const err = parseResult(result);
     expect(err.error).toContain('not found');
